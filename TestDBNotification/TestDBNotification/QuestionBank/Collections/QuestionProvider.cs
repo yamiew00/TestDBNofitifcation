@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using TestDBNotification.QuestionBank.Models;
 
@@ -10,9 +9,15 @@ namespace TestDBNotification.QuestionBank.Collections
     {
         public Dictionary<string, QuestionCollection> QuestionCollections { get; private set; }
 
+        public QuestionCollection this[string subject]
+        {
+            get => QuestionCollections[subject];
+        }
+
         public QuestionProvider(IEnumerable<string> subjects, MongoDataStream<Question> mongoDataStream)
         {
             QuestionCollections = new Dictionary<string, QuestionCollection>();
+
             foreach (var subject in subjects)
             {
                 var questionCollection = new QuestionCollection(subject, 
@@ -27,11 +32,6 @@ namespace TestDBNotification.QuestionBank.Collections
         public async Task<IEnumerable<Question>> GetAll(string subject)
         {
             return await QuestionCollections[subject].Get();
-        }
-
-        public async Task<int> GetInt(string subject)
-        {
-            return await QuestionCollections[subject].GetInt();
         }
 
         public async Task<int> CountAll()

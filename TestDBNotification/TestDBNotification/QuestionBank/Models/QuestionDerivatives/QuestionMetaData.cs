@@ -14,5 +14,8 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
 
         [BsonElement("content")]
         public IEnumerable<QuestionMetaContent> Content;
+
+
+        public string Knowledge;
     }
 }
