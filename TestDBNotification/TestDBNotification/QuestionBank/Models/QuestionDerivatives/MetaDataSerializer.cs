@@ -28,7 +28,7 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
                 {
                     knowledge = jsonMetaData.Content.FirstOrDefault().Code;
                 }
-                else if(jsonMetaData.Code == "SOURCE")
+                else if (jsonMetaData.Code == "SOURCE")
                 {
                     source = jsonMetaData.Content.FirstOrDefault().Code;
                 }
