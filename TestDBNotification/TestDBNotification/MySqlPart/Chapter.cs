@@ -6,16 +6,15 @@ namespace TestDBNotification.MySqlPart
 {
     public class Chapter
     {
+        public string UID;
+
         public string Name;
 
         public string Code;
 
-        public Chapter ParentNode;
+        public string ParentUID;
 
-        public Chapter(string code)
-        {
-            Code = code;
-        }
+        public Chapter ParentNode;
 
         /// <summary>
         /// 只有末節點才會存知識點

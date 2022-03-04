@@ -10,7 +10,7 @@ using TestDBNotification.QuestionBank.Models;
 using System.Linq;
 using TestDBNotification.MySqlPart.Models.SubjectMeta;
 using MySql.Data.MySqlClient;
-
+using TestDBNotification.MySqlPart.Models.Resources;
 
 namespace TestDBNotification
 {
@@ -56,7 +56,7 @@ namespace TestDBNotification
         };
 
 
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             MySqlPart();
 
@@ -72,17 +72,25 @@ namespace TestDBNotification
 
             var start = Environment.TickCount;
             //context
-            yearBooksContext yearBooksContext = new yearBooksContext();
+            yearBooksContext yearBooksContext = new yearBooksContext(); //dev的
             SubjectMetaContext subjectMetaContext = new SubjectMetaContext(dev);
+            resourceContext resourceContext = new resourceContext();    //dev的
             subjectMetaContext.Populate(Subjects);
             Console.WriteLine($"{Environment.TickCount - start}毫秒");
 
-            //先拿所有書
+            //定義表:版本
+            var versions = resourceContext.Definitions
+                                          .Where(def => def.Type == "PUBLISHER")
+                                          .ToDictionary(def => def.Code);
+           
+
+            //先拿所有書(BookList)
             Dictionary<string, Book> Books = yearBooksContext.BookLists
                                                              .ToDictionary(item => item.BookId,
                                                                            item => new Book()
                                                                            {
                                                                                BookId = item.BookId,
+                                                                               Version = versions[item.BookId.Substring(3, item.BookId.Length - 3).Split("-")[0]].Name,
                                                                                Year = item.Year,
                                                                                Curriculum = item.Curriculum,
                                                                                EduSubject = item.EduSubject
@@ -90,23 +98,25 @@ namespace TestDBNotification
 
             //全章節
             var chapter109 = yearBooksContext.Chapter109s.AsEnumerable().ToList();
-            var chapter110 = yearBooksContext.Chapter110s.AsEnumerable();
-            var chapter111 = yearBooksContext.Chapter111s.AsEnumerable();
+            var chapter110 = yearBooksContext.Chapter110s.AsEnumerable().ToList();
+            var chapter111 = yearBooksContext.Chapter111s.AsEnumerable().ToList();
 
             //組書
-            //109
+            //[109]
+            
+            //走訪bookmeta
             var book109 = yearBooksContext.BookMeta109s.AsEnumerable();
-            foreach (var book in book109)
+            foreach (var bookMeta in book109)
             {
-                var subject = book.EduSubject;
-                var metaUID = book.MetaUid;
-                var bookId = book.BookId;
+                var subject = bookMeta.EduSubject;
+                var metaUID = bookMeta.MetaUid;
+                var bookId = bookMeta.BookId;
 
                 //科目
                 var subjectMeta = subjectMetaContext.GetByUID(subject, metaUID);
 
                 //章節
-                var chapter = chapter109.FirstOrDefault(c => c.Uid == book.ParentUid);
+                var chapter = chapter109.FirstOrDefault(c => c.Uid == bookMeta.ParentUid);
 
                 //合併
                 var newBook = Books[bookId];
@@ -117,13 +127,54 @@ namespace TestDBNotification
                 });
             }
 
+            //走訪chapter
+            var start1 = Environment.TickCount;
+            foreach (var chapter in chapter109)
+            {
+                var bookID = chapter.BookId;
+                var book = Books[bookID];
 
-            var c = 1;
+                //加節點
+                book.AddNode(new Chapter()
+                {
+                    UID = chapter.Uid,
+                    Name = chapter.Name,
+                    Code = chapter.Code,
+                    ParentUID = chapter.ParentUid
+                });
+            }
+
+            //建構樹狀
+
+            Console.WriteLine($"建樹狀: {Environment.TickCount - start1}毫秒");
+
+            var s = "stop";
+            //[110]
+            //[111]
 
 
+            //test
+            var start2 = Environment.TickCount;
 
 
+            //
 
+            var jpcBook = Books.Values
+                               .Where(book => book.EduSubject == "JPC")
+                               .GroupBy(book => book.Version)
+                               .ToDictionary(group => group.Key, group => group.GroupBy(book => book.Curriculum)
+                                                                               .ToDictionary(subGroup => subGroup.Key, subGroup => subGroup.GroupBy(book => book.Year)
+                                                                                                                                           .ToDictionary(tinyGroup => tinyGroup.Key, tinyGroup => tinyGroup.ToList())));
+
+            var jpcBooks = Books.Values.Where(book => book.EduSubject == "JPC")
+                                       .GroupBy(book => book.Curriculum)
+                                       .ToDictionary(group => group.Key, group => group.GroupBy(book => book.Year)
+                                                                                       .ToDictionary(group => group.Key,
+                                                                                                     group => group.ToList()));
+
+
+            Console.WriteLine($"{Environment.TickCount - start2}毫秒");
+            var s2 = "stop";
 
 
             var list = subjectMetaContext.GetBySubject("HMA");
