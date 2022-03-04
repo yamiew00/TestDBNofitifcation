@@ -59,6 +59,17 @@ namespace TestDBNotification.QuestionBank.Indexes
             return index;
         }
 
+        public IEnumerable<ObjectId> GetByKnowledges(IEnumerable<string> bookIDs, IEnumerable<string> knowledges)
+        {
+            var books = BookIdIndex.Where(x => bookIDs.Contains(x.Key))
+                                   .SelectMany(x => x.Value);
+            var a = books.Contains(new ObjectId("613ca539732190520fdc534a"));
+            var knows = KnowledgeIndex.Where(x => knowledges.Contains(x.Key))
+                                      .SelectMany(x => x.Value);
+            var b = books.Contains(new ObjectId("613ca539732190520fdc534a"));
+            return books.Intersect(knows);
+        }
+
         public int GetInt()
         {
             return BookIdIndex.Count;

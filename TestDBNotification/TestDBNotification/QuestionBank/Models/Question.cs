@@ -64,7 +64,5 @@ namespace TestDBNotification.QuestionBank.Models
 
         //[BsonElement("htmlParts")]
         //public QuestionHtmlPart HtmlParts;
-
-        
     }
 }

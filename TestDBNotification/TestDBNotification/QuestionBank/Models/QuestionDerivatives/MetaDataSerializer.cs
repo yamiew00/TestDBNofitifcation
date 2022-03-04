@@ -13,6 +13,8 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
         {
             var knowledge = string.Empty;
             var source = string.Empty;
+            var questionType = string.Empty;
+            var difficulty = string.Empty;
 
             var bsonReader = context.Reader;
 
@@ -32,6 +34,14 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
                 {
                     source = jsonMetaData.Content.FirstOrDefault().Code;
                 }
+                else if (jsonMetaData.Code == "QUES_TYPE")
+                {
+                    questionType = jsonMetaData.Content.FirstOrDefault().Code;
+                }
+                else if (jsonMetaData.Code == "DIFFICULTY")
+                {
+                    difficulty = jsonMetaData.Content.FirstOrDefault().Code;
+                }
 
                 //忽略type讀取的值，但必須要讀
                 bsonReader.ReadBsonType();
@@ -41,7 +51,9 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
             return new MetaData()
             {
                 Knowledge = knowledge,
-                Source = source
+                Source = source,
+                QuestionType = questionType,
+                Difficulty = difficulty
             };
         }
     }

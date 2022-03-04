@@ -9,5 +9,9 @@ namespace TestDBNotification.QuestionBank.Models.QuestionDerivatives
         public string Knowledge { get; set; }
 
         public string Source { get; set; }
+
+        public string QuestionType { get; set; }
+
+        public string Difficulty { get; set; }
     }
 }

@@ -91,5 +91,11 @@ namespace TestDBNotification.QuestionBank.Collections
             await InitTask;
             return QuestionIndex.GetSourceIndex(index);
         }
+
+        public async Task<IEnumerable<ObjectId>> GetByKnowledges(IEnumerable<string> bookIDs, IEnumerable<string> knowledges)
+        {
+            await InitTask;
+            return QuestionIndex.GetByKnowledges(bookIDs, knowledges);
+        }
     }
 }

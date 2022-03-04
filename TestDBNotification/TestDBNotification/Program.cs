@@ -56,9 +56,11 @@ namespace TestDBNotification
         };
 
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            MySqlPart();
+            //MySqlPart();
+
+            await MongoPart();
 
 
             Console.WriteLine("done");
@@ -82,7 +84,7 @@ namespace TestDBNotification
             var versions = resourceContext.Definitions
                                           .Where(def => def.Type == "PUBLISHER")
                                           .ToDictionary(def => def.Code);
-           
+
 
             //先拿所有書(BookList)
             Dictionary<string, Book> Books = yearBooksContext.BookLists
@@ -103,7 +105,7 @@ namespace TestDBNotification
 
             //組書
             //[109]
-            
+
             //走訪bookmeta
             var book109 = yearBooksContext.BookMeta109s.AsEnumerable();
             foreach (var bookMeta in book109)
@@ -193,34 +195,351 @@ namespace TestDBNotification
             MongoClient mongoClient = new MongoClient(release);
             var database = mongoClient.GetDatabase("QuestionBank");
 
-
             //test3
-            var ech = new List<string>() { "ECH" };
-            MongoDataStream<Question> mongoDataStream = new MongoDataStream<Question>(database, Subjects); //單例
-            QuestionProvider questionProvider = new QuestionProvider(Subjects, mongoDataStream);
-
-            //mongoDataStream.Activate();
-
-            //Console.WriteLine(await questionProvider.CountAll());
+            var testSubject = "JMA";
+            var subjectList = new List<string>() { testSubject };
+            
+            MongoDataStream<Question> mongoDataStream = new MongoDataStream<Question>(database, subjectList); //單例
+            QuestionProvider questionProvider = new QuestionProvider(subjectList, mongoDataStream);
 
             var knowledge = "E-CH-233";
             var source = "NS016";
 
-            //Console.WriteLine($"{await questionProvider["ECH"].GetIndexContent(knowledge)}");
-            Console.WriteLine($"{await questionProvider["ECH"].GetSource(source)}");
-            Console.WriteLine($"到這裡是{(Environment.TickCount - start)}毫秒");
-
-            Console.WriteLine(await questionProvider.CountAll());
-            Console.WriteLine($"全部是{(Environment.TickCount - start)}毫秒");
 
             while (true)
             {
                 Console.ReadLine();
-
                 var x = Environment.TickCount;
-                //Console.WriteLine($"EMAB09 = {await questionProvider["EMA"].GetByBook("110N-EMAB09")}");
+
+                //var bookIds = new List<string>() { "110N-ECHB00", "110N-ECHB01", "110N-ECHB02", "110N-ECHB03", "110N-ECHB04", "110N-ECHB05", "110N-ECHB06" };
+                //var knowledges = new List<string>() { "ECH-14", "ECH-15", "ECH-16", "ECH-17", "ECH-18", "ECH-19", "ECH-20", "ECH-21", "ECH-24", "ECH-23", "ECH-22", "ECH-26", "ECH-25", "ECH-27", "ECH-28" };
+
+                var bookIds = new List<string>() {
+  "110N-JMAB01",
+  "110N-JMAB02",
+  "110N-JMAB03",
+  "110N-JMAB04",
+  "110N-JMAB05",
+  "110N-JMAB06" };
+                var knowledges = new List<string>() {
+                    
+  "JMA-1-1-4",
+  "JMA-1-1-5",
+  "JMA-1-1-2",
+  "JMA-1-1-1",
+  "JMA-1-1-3",
+  "JMA-1-2-2",
+  "JMA-1-2-3",
+  "JMA-1-2-1",
+  "JMA-1-1-6",
+  "JMA-1-1-7",
+  "JMA-1-2-6",
+  "JMA-1-2-7",
+  "JMA-1-2-4",
+  "JMA-1-2-5",
+  "JMA-1-3-1",
+  "JMA-1-3-2",
+  "JMA-1-4-1",
+  "JMA-1-4-3",
+  "JMA-1-4-2",
+  "JMA-1-5-9",
+  "JMA-1-5-3",
+  "JMA-1-5-2",
+  "JMA-1-5-6",
+  "JMA-1-5-8",
+  "JMA-1-5-1",
+  "JMA-1-5-5",
+  "JMA-1-5-10",
+  "JMA-1-5-4",
+  "JMA-1-5-7",
+  "JMA-1-5-12",
+  "JMA-1-5-13",
+  "JMA-1-5-14",
+  "JMA-1-5-11",
+  "JMA-1-6-1",
+  "JMA-1-6-2",
+  "JMA-1-6-4",
+  "JMA-1-6-6",
+  "JMA-1-6-3",
+  "JMA-1-6-5",
+  "JMA-1-3-3",
+  "JMA-2-1-1",
+  "JMA-2-1-3",
+  "JMA-2-1-2",
+  "JMA-2-1-5",
+  "JMA-2-1-4",
+  "JMA-2-1-6",
+  "JMA-2-1-9",
+  "JMA-2-1-8",
+  "JMA-2-1-7",
+  "JMA-2-1-10",
+  "JMA-5-4-1",
+  "JMA-5-1-1",
+  "JMA-5-1-2",
+  "JMA-5-1-4",
+  "JMA-5-1-3",
+  "JMA-6-1-1",
+  "JMA-5-1-5",
+  "JMA-2-2-1",
+  "JMA-2-2-3",
+  "JMA-2-2-4",
+  "JMA-2-2-2",
+  "JMA-2-2-5",
+  "JMA-2-3-3",
+  "JMA-2-3-1",
+  "JMA-2-3-5",
+  "JMA-2-3-2",
+  "JMA-2-3-4",
+  "JMA-2-3-6",
+  "JMA-3-1-4",
+  "JMA-3-1-1",
+  "JMA-3-1-3",
+  "JMA-3-1-2",
+  "JMA-3-2-1",
+  "JMA-3-2-3",
+  "JMA-3-3-1",
+  "JMA-3-2-2",
+  "JMA-1-7-1",
+  "JMA-1-7-3",
+  "JMA-1-7-2",
+  "JMA-1-7-4",
+  "JMA-1-7-5",
+  "JMA-7-1-1",
+  "JMA-7-2-3",
+  "JMA-7-2-2",
+  "JMA-7-2-1",
+  "JMA-7-2-5",
+  "JMA-7-2-4",
+  "JMA-7-2-6",
+  "JMA-7-2-8",
+  "JMA-7-2-7",
+  "JMA-8-1-6",
+  "JMA-8-1-1",
+  "JMA-8-1-3",
+  "JMA-8-1-4",
+  "JMA-8-1-2",
+  "JMA-8-1-5",
+  "JMA-8-2-3",
+  "JMA-8-2-2",
+  "JMA-8-2-5",
+  "JMA-8-2-4",
+  "JMA-8-2-1",
+  "JMA-1-8-4",
+  "JMA-1-8-2",
+  "JMA-1-8-1",
+  "JMA-1-8-3",
+  "JMA-9-2-1",
+  "JMA-9-1-1",
+  "JMA-9-2-3",
+  "JMA-9-2-2",
+  "JMA-1-9-1",
+  "JMA-1-9-3",
+  "JMA-1-9-4",
+  "JMA-1-9-6",
+  "JMA-1-9-2",
+  "JMA-1-9-5",
+  "JMA-1-9-9",
+  "JMA-1-9-7",
+  "JMA-1-9-11",
+  "JMA-1-9-12",
+  "JMA-1-9-8",
+  "JMA-1-9-10",
+  "JMA-5-2-2",
+  "JMA-5-2-4",
+  "JMA-5-2-3",
+  "JMA-9-3-5",
+  "JMA-9-3-4",
+  "JMA-9-3-2",
+  "JMA-9-3-3",
+  "JMA-9-3-6",
+  "JMA-9-3-1",
+  "JMA-9-3-8",
+  "JMA-9-3-7",
+  "JMA-2-4-1",
+  "JMA-2-4-2",
+  "JMA-2-4-4",
+  "JMA-2-4-3",
+  "JMA-2-4-5",
+  "JMA-2-4-6",
+  "JMA-2-4-7",
+  "JMA-2-4-8",
+  "JMA-2-4-9",
+  "JMA-8-1-8",
+  "JMA-8-1-9",
+  "JMA-8-1-7",
+  "JMA-1-10-4",
+  "JMA-1-10-5",
+  "JMA-1-10-6",
+  "JMA-1-10-1",
+  "JMA-1-10-2",
+  "JMA-1-10-3",
+  "JMA-1-10-8",
+  "JMA-1-10-7",
+  "JMA-10-1-1",
+  "JMA-5-1-8",
+  "JMA-10-2-1",
+  "JMA-10-2-2",
+  "JMA-10-1-2",
+  "JMA-10-2-3",
+  "JMA-5-2-6",
+  "JMA-5-2-5",
+  "JMA-5-1-6",
+  "JMA-5-4-2",
+  "JMA-5-2-7",
+  "JMA-5-4-3",
+  "JMA-5-1-7",
+  "JMA-5-5-1",
+  "JMA-5-5-5",
+  "JMA-5-5-3",
+  "JMA-5-5-6",
+  "JMA-5-5-4",
+  "JMA-5-5-2",
+  "JMA-5-2-9",
+  "JMA-5-2-13",
+  "JMA-5-2-14",
+  "JMA-5-2-11",
+  "JMA-5-2-10",
+  "JMA-5-2-8",
+  "JMA-5-2-12",
+  "JMA-5-2-17",
+  "JMA-5-2-16",
+  "JMA-5-2-15",
+  "JMA-5-2-21",
+  "JMA-5-2-18",
+  "JMA-5-2-20",
+  "JMA-5-2-19",
+  "JMA-5-3-3",
+  "JMA-5-3-2",
+  "JMA-5-3-4",
+  "JMA-5-3-5",
+  "JMA-5-3-6",
+  "JMA-5-3-13",
+  "JMA-5-3-10",
+  "JMA-5-3-14",
+  "JMA-5-3-7",
+  "JMA-5-3-12",
+  "JMA-5-3-15",
+  "JMA-5-3-11",
+  "JMA-5-3-8",
+  "JMA-5-3-9",
+  "JMA-1-7-6",
+  "JMA-1-7-7",
+  "JMA-1-7-8",
+  "JMA-5-2-22",
+  "JMA-5-6-3",
+  "JMA-5-6-1",
+  "JMA-5-6-2",
+  "JMA-5-6-5",
+  "JMA-5-6-4",
+  "JMA-5-6-9",
+  "JMA-5-6-10",
+  "JMA-5-6-11",
+  "JMA-5-6-6",
+  "JMA-5-6-8",
+  "JMA-5-6-7",
+  "JMA-5-6-12",
+  "JMA-5-6-13",
+  "JMA-5-6-14",
+  "JMA-5-7-8",
+  "JMA-5-7-6",
+  "JMA-5-7-4",
+  "JMA-5-7-2",
+  "JMA-5-7-5",
+  "JMA-5-7-1",
+  "JMA-5-7-3",
+  "JMA-5-7-7",
+  "JMA-5-7-9",
+  "JMA-5-7-11",
+  "JMA-5-7-10",
+  "JMA-11-1-1",
+  "JMA-11-1-2",
+  "JMA-5-2-26",
+  "JMA-5-2-23",
+  "JMA-5-2-25",
+  "JMA-5-2-24",
+  "JMA-10-3-1",
+  "JMA-10-3-2",
+  "JMA-10-3-3",
+  "JMA-10-3-4",
+  "JMA-10-3-5",
+  "JMA-8-2-9",
+  "JMA-8-2-8",
+  "JMA-8-2-7",
+  "JMA-8-2-6",
+  "JMA-12-1-1",
+  "JMA-12-1-2",
+  "JMA-6-3-3",
+  "JMA-6-6-1",
+  "JMA-6-4-2",
+  "JMA-6-7-2",
+  "JMA-6-3-2",
+  "JMA-6-4-3",
+  "JMA-6-3-1",
+  "JMA-6-4-1",
+  "JMA-6-7-1"
+ };
+
+
+                var result = await questionProvider.QuestionCollections[testSubject].GetByKnowledges(bookIds, knowledges);
+
+                var boo = result.Contains(new MongoDB.Bson.ObjectId("613ca539732190520fdc534a"));
+
+                var y = Environment.TickCount;
+
+                var ans = database.GetCollection<Question>("Question" + testSubject).Find(x => result.Contains(x._id))
+                                  .ToEnumerable()
+                                  .GroupBy(x => x.MetaData.QuestionType)
+                                  .ToDictionary(x => x.Key, x => x.ToList());
+
+                var z = Environment.TickCount;
+
+                var diff = ans.Select(x => new
+                {
+                    key = x.Key,
+                    Value = x.Value.GroupBy(y => y.MetaData.Difficulty)
+                                  .ToDictionary(y => y.Key, y => y.ToList())
+                }).ToList();
+
+                Console.WriteLine($"找索引用了{z - y}毫秒");
+                Console.WriteLine($"難易度用了{Environment.TickCount - z}毫秒");
+
+                var test = Environment.TickCount;
+                var a = database.GetCollection<Question>("QuestionECH").Find(x => result.Contains(x._id))
+                                .ToString();
+                Console.WriteLine($"tolist用了{Environment.TickCount - test}毫秒");
+
+
                 Console.WriteLine($"花了{Environment.TickCount - x}毫秒");
                 Console.WriteLine("----------------------------------");
+
+
+                Console.WriteLine();
+
+                var n1 = Environment.TickCount;
+                var allData = database.GetCollection<Question>("Question" + testSubject)
+                                      .Find(x => true)
+                                      .ToList();
+                var n2 = Environment.TickCount;
+
+                var indexes = await questionProvider.QuestionCollections[testSubject].GetByKnowledges(bookIds, knowledges);
+                var n3 = Environment.TickCount;
+
+                var dict = allData.ToDictionary(x => x._id);
+
+                var n4 = Environment.TickCount;
+
+                var re = indexes.Select(x => dict[x]).ToList();
+
+                var n5 = Environment.TickCount;
+
+
+                Console.WriteLine($"去mongo抓全部{n2 - n1}毫秒");
+
+                Console.WriteLine($"找索引{n3 - n2}毫秒");
+
+
+                Console.WriteLine($"回吐全資料{n5 - n4}毫秒");
+
             }
 
             if (true)
