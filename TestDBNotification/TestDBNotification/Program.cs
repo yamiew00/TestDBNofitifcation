@@ -191,25 +191,53 @@ namespace TestDBNotification
 
             //基本設定
             var dev = "mongodb+srv://question-bank-admin:mk+nfFx*wmBgR4G#@ruledata.tmqy1.mongodb.net/{0}?retryWrites=true&w=majority";
+            var uat = "mongodb+srv://question-bank-admin:2liAQgWgmKCRhhzP@questionbank.qhfpn.mongodb.net/{0}?retryWrites=true&w=majority&MinConnectionPoolSize=30&MaxConnectionPoolSize=100";
             var release = "mongodb+srv://question-bank-admin:PV975tjHcXgzHpUE@clusters.3w0iy.mongodb.net/{0}?retryWrites=true&w=majority";
-            MongoClient mongoClient = new MongoClient(release);
+            MongoClient mongoClient = new MongoClient(uat);
             var database = mongoClient.GetDatabase("QuestionBank");
 
             //test3
-            var testSubject = "JMA";
+            var testSubject = "ECH";
+            //var subjectList = new List<string>() { "EPE", "JNA", "JPE", "HCN", "ECN", "EEN", "JCO", "HEW", "JCN", "JEN" };
             var subjectList = new List<string>() { testSubject };
-            
-            MongoDataStream<Question> mongoDataStream = new MongoDataStream<Question>(database, subjectList); //單例
-            QuestionProvider questionProvider = new QuestionProvider(subjectList, mongoDataStream);
+
+            MongoDataStream<Question> mongoDataStream = new MongoDataStream<Question>(database, Subjects); //單例
+            QuestionProvider questionProvider = new QuestionProvider(Subjects, mongoDataStream);
+
+            //activate
+            mongoDataStream.Activate();
+
 
             var knowledge = "E-CH-233";
             var source = "NS016";
+
+
+            var here = Environment.TickCount;
+            await questionProvider.IsComplete();
+
+            Console.WriteLine($"全完成需要 {Environment.TickCount - here}毫秒");
+
+            //測試資料正確性
+
+            while (true)
+            {
+                var subject1 = Console.ReadLine();
+                if (string.IsNullOrEmpty(subject1))
+                {
+                    continue;
+                }
+                Console.WriteLine($"{subject1} 有 {await questionProvider.QuestionCollections[subject1].GetQuestionAmount()}");
+            }
+
+
 
 
             while (true)
             {
                 Console.ReadLine();
                 var x = Environment.TickCount;
+
+
 
                 //var bookIds = new List<string>() { "110N-ECHB00", "110N-ECHB01", "110N-ECHB02", "110N-ECHB03", "110N-ECHB04", "110N-ECHB05", "110N-ECHB06" };
                 //var knowledges = new List<string>() { "ECH-14", "ECH-15", "ECH-16", "ECH-17", "ECH-18", "ECH-19", "ECH-20", "ECH-21", "ECH-24", "ECH-23", "ECH-22", "ECH-26", "ECH-25", "ECH-27", "ECH-28" };
@@ -480,6 +508,7 @@ namespace TestDBNotification
  };
 
 
+
                 var result = await questionProvider.QuestionCollections[testSubject].GetByKnowledges(bookIds, knowledges);
 
                 var boo = result.Contains(new MongoDB.Bson.ObjectId("613ca539732190520fdc534a"));
@@ -516,30 +545,11 @@ namespace TestDBNotification
                 Console.WriteLine();
 
                 var n1 = Environment.TickCount;
-                var allData = database.GetCollection<Question>("Question" + testSubject)
-                                      .Find(x => true)
-                                      .ToList();
-                var n2 = Environment.TickCount;
+                
+                var a2 = (await questionProvider.QuestionCollections[testSubject]
+                                               .GetByKnowledges2(bookIds, knowledges)).ToList();
 
-                var indexes = await questionProvider.QuestionCollections[testSubject].GetByKnowledges(bookIds, knowledges);
-                var n3 = Environment.TickCount;
-
-                var dict = allData.ToDictionary(x => x._id);
-
-                var n4 = Environment.TickCount;
-
-                var re = indexes.Select(x => dict[x]).ToList();
-
-                var n5 = Environment.TickCount;
-
-
-                Console.WriteLine($"去mongo抓全部{n2 - n1}毫秒");
-
-                Console.WriteLine($"找索引{n3 - n2}毫秒");
-
-
-                Console.WriteLine($"回吐全資料{n5 - n4}毫秒");
-
+                Console.WriteLine($"{Environment.TickCount - n1}毫秒");
             }
 
             if (true)

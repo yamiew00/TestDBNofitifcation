@@ -3,7 +3,6 @@ using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TestDBNotification.QuestionBank.Indexes;
 using TestDBNotification.QuestionBank.Models;
@@ -15,8 +14,6 @@ namespace TestDBNotification.QuestionBank.Collections
     {
         public string Subject { get; private set; }
 
-        private Dictionary<ObjectId, Question> Dictionary;
-
         //test
         public QuestionIndex QuestionIndex;
 
@@ -25,8 +22,6 @@ namespace TestDBNotification.QuestionBank.Collections
         public QuestionCollection(string subject, IMongoCollection<Question> mongoCollection)
         {
             Subject = subject;
-            Dictionary = new Dictionary<ObjectId, Question>();
-
             InitTask = Init(mongoCollection);
         }
 
@@ -40,13 +35,10 @@ namespace TestDBNotification.QuestionBank.Collections
             await Task.Run(() =>
             {
                 var start = Environment.TickCount;
-                //Dictionary = mongoCollection.Find(item => true)
-                //                            .ToEnumerable()
-                //                            .ToDictionary(question => question._id);
-
                 var data = mongoCollection.Find(item => true).ToEnumerable();
-                QuestionIndex = QuestionIndex.CreateIndexes(data);
-                Console.WriteLine($"                               {Subject} 花了 {(Environment.TickCount - start)}毫秒");
+                //不需要傳科目
+                QuestionIndex = QuestionIndex.CreateIndexes(data, Subject);
+                Console.WriteLine($"            {Subject}: {Environment.TickCount - start}毫秒");
             });
         } 
 
@@ -54,23 +46,16 @@ namespace TestDBNotification.QuestionBank.Collections
         {
             return (question) =>
             {
-                Dictionary[question._id] = question;
+                InitTask = Task.Run(() =>
+                {
+                    QuestionIndex.InsertIndex(question);
+                });
             };
         }
 
-
-        public async Task<IEnumerable<Question>> Get()
+        public async Task<int> GetQuestionAmount()
         {
             await InitTask;
-            return Dictionary.Values;
-        }
-
-        public async Task<int> GetInt()
-        {
-            await InitTask;
-            //return Dictionary.Count;
-
-            //不同的書數量
             return QuestionIndex.GetInt();
         }
 
@@ -96,6 +81,17 @@ namespace TestDBNotification.QuestionBank.Collections
         {
             await InitTask;
             return QuestionIndex.GetByKnowledges(bookIDs, knowledges);
+        }
+
+        public async Task<IEnumerable<Question>> GetByKnowledges2(IEnumerable<string> bookIDs, IEnumerable<string> knowledges)
+        {
+            await InitTask;
+            return QuestionIndex.GetByKnowledges2(bookIDs, knowledges);
+        }
+
+        public async Task IsComplete()
+        {
+             await InitTask;
         }
     }
 }

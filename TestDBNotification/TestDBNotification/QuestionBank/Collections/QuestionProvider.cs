@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TestDBNotification.QuestionBank.Models;
 
@@ -29,19 +30,20 @@ namespace TestDBNotification.QuestionBank.Collections
             }
         }
 
-        public async Task<IEnumerable<Question>> GetAll(string subject)
-        {
-            return await QuestionCollections[subject].Get();
-        }
 
         public async Task<int> CountAll()
         {
             var sum = 0;
             foreach (var questionCollection in QuestionCollections.Values)
             {
-                sum += await questionCollection.GetInt();
+                sum += await questionCollection.GetQuestionAmount();
             }
             return sum;
+        }
+
+        public async Task IsComplete()
+        {
+            await Task.WhenAll(QuestionCollections.Values.Select(x => x.IsComplete()));
         }
     }
 }

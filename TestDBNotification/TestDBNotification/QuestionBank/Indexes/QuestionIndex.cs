@@ -4,78 +4,135 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TestDBNotification.QuestionBank.Models;
 
 namespace TestDBNotification.QuestionBank.Indexes
 {
     public class QuestionIndex
     {
-        private ConcurrentDictionary<string, List<ObjectId>> BookIdIndex = new ConcurrentDictionary<string, List<ObjectId>>();
 
-        private ConcurrentDictionary<string, List<ObjectId>> KnowledgeIndex = new ConcurrentDictionary<string, List<ObjectId>>();
+        /// <summary>
+        /// 需要存的最少資料
+        /// </summary>
+        private ConcurrentDictionary<ObjectId, Question> RawData;
 
-        private ConcurrentDictionary<string, List<ObjectId>> SourceIndex = new ConcurrentDictionary<string, List<ObjectId>>();
+        private ConcurrentDictionary<string, ConcurrentBag<ObjectId>> BookIdIndex = new ConcurrentDictionary<string, ConcurrentBag<ObjectId>>();
+
+        private ConcurrentDictionary<string, ConcurrentBag<ObjectId>> KnowledgeIndex = new ConcurrentDictionary<string, ConcurrentBag<ObjectId>>();
+
+        private ConcurrentDictionary<string, ConcurrentBag<ObjectId>> SourceIndex = new ConcurrentDictionary<string, ConcurrentBag<ObjectId>>();
 
         private QuestionIndex()
         {
         }
 
-        public static QuestionIndex CreateIndexes(IEnumerable<Question> questions)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="questions"></param>
+        /// <returns></returns>
+        public static QuestionIndex CreateIndexes(IEnumerable<Question> questions, string subject)
         {
-            var index = new QuestionIndex();
+            QuestionIndex indexInstance = new QuestionIndex();
+
+            indexInstance.RawData = new ConcurrentDictionary<ObjectId, Question>(questions.ToDictionary(x => x._id));
 
             foreach (var question in questions)
             {
                 //BookId
-                if (index.BookIdIndex.TryGetValue(question.BookID, out var list))
+                if (indexInstance.BookIdIndex.TryGetValue(question.BookID, out var bookIdBag))
                 {
-                    list.Add(question._id);
+                    bookIdBag.Add(question._id);
                 }
                 else
                 {
-                    index.BookIdIndex[question.BookID] = new List<ObjectId>() { question._id };
+                    indexInstance.BookIdIndex[question.BookID] = new ConcurrentBag<ObjectId>() { question._id };
                 }
 
                 //KnowledgeIndex
-                if (index.KnowledgeIndex.TryGetValue(question.MetaData.Knowledge, out var knowledgeList))
+                if (indexInstance.KnowledgeIndex.TryGetValue(question.MetaData.Knowledge, out var knowledgeBag))
                 {
-                    knowledgeList.Add(question._id);
+                    knowledgeBag.Add(question._id);
                 }
                 else
                 {
-                    index.KnowledgeIndex[question.MetaData.Knowledge] = new List<ObjectId>() { question._id };
+                    indexInstance.KnowledgeIndex[question.MetaData.Knowledge] = new ConcurrentBag<ObjectId>() { question._id };
                 }
 
                 //Source
-                if (index.SourceIndex.TryGetValue(question.MetaData.Source, out var sourceList))
+                if (indexInstance.SourceIndex.TryGetValue(question.MetaData.Source, out var sourceBag))
                 {
-                    sourceList.Add(question._id);
+                    sourceBag.Add(question._id);
                 }
                 else
                 {
-                    index.SourceIndex[question.MetaData.Source] = new List<ObjectId>() { question._id };
+                    indexInstance.SourceIndex[question.MetaData.Source] = new ConcurrentBag<ObjectId>() { question._id };
                 }
             }
-            return index;
+            return indexInstance;
+        }
+
+        public void InsertIndex(Question question)
+        {
+            RawData.TryAdd(question._id, question);
+
+            //重複性很高
+
+            //BookId
+            if (BookIdIndex.TryGetValue(question.BookID, out var bookIdBag))
+            {
+                bookIdBag.Add(question._id);
+            }
+            else
+            {
+                BookIdIndex[question.BookID] = new ConcurrentBag<ObjectId>() { question._id };
+            }
+
+            //KnowledgeIndex
+            if (KnowledgeIndex.TryGetValue(question.MetaData.Knowledge, out var knowledgeBag))
+            {
+                knowledgeBag.Add(question._id);
+            }
+            else
+            {
+                KnowledgeIndex[question.MetaData.Knowledge] = new ConcurrentBag<ObjectId>() { question._id };
+            }
+
+            //Source
+            if (SourceIndex.TryGetValue(question.MetaData.Source, out var sourceBag))
+            {
+                sourceBag.Add(question._id);
+            }
+            else
+            {
+                SourceIndex[question.MetaData.Source] = new ConcurrentBag<ObjectId>() { question._id };
+            }
         }
 
         public IEnumerable<ObjectId> GetByKnowledges(IEnumerable<string> bookIDs, IEnumerable<string> knowledges)
         {
             var books = BookIdIndex.Where(x => bookIDs.Contains(x.Key))
                                    .SelectMany(x => x.Value);
-            var a = books.Contains(new ObjectId("613ca539732190520fdc534a"));
             var knows = KnowledgeIndex.Where(x => knowledges.Contains(x.Key))
                                       .SelectMany(x => x.Value);
-            var b = books.Contains(new ObjectId("613ca539732190520fdc534a"));
             return books.Intersect(knows);
         }
 
-        public int GetInt()
+        public IEnumerable<Question> GetByKnowledges2(IEnumerable<string> bookIDs, IEnumerable<string> knowledges)
         {
-            return BookIdIndex.Count;
+            var ids = GetByKnowledges(bookIDs, knowledges);
+            return ids.Select(x => RawData[x]);
         }
 
-        public List<ObjectId> GetByBook(string bookId)
+
+
+        public int GetInt()
+        {
+            return RawData.Count;
+        }
+
+        public IEnumerable<ObjectId> GetByBook(string bookId)
         {
             return BookIdIndex[bookId];
         }
